@@ -1,0 +1,28 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
+from django.db import models, migrations
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('analyst', '0011_auto_20170213_1431'),
+    ]
+
+    operations = [
+        migrations.CreateModel(
+            name='Tasks',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('username', models.CharField(default=b'', max_length=100, blank=True)),
+                ('modal', models.CharField(default=b'', max_length=100, blank=True)),
+                ('fileid', models.IntegerField(null=True, blank=True)),
+            ],
+            options={
+                'verbose_name': '\u4efb\u52a1',
+                'verbose_name_plural': '\u4efb\u52a1\u5217\u8868',
+            },
+            bases=(models.Model,),
+        ),
+    ]

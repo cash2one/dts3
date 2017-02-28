@@ -1,0 +1,73 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
+from django.db import models, migrations
+from django.conf import settings
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+    ]
+
+    operations = [
+        migrations.CreateModel(
+            name='Extra',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('ips', models.TextField(default='', max_length=65535, verbose_name='\u5ba2\u6237\u767d\u540d\u5355', blank=True)),
+            ],
+            options={
+                'verbose_name': '\u767d\u540d\u5355',
+                'verbose_name_plural': '\u767d\u540d\u5355\u5217\u8868',
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Member',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('role', models.IntegerField(default=1, max_length=1, choices=[(0, '\u6570\u636e\u68c0\u67e5'), (1, '\u5ba2\u6237'), (2, '\u5206\u6790\u5e08')])),
+                ('allow_ips', models.TextField(default='', max_length=800, blank=True)),
+                ('permission', models.TextField(default='x:0', help_text='\u63a5\u53e3\u540d\u79f0\uff1a\u5339\u914d\u6570\u91cf', max_length=65535, verbose_name='\u63a5\u53e3\u6743\u9650', blank=True)),
+                ('ty3', models.TextField(default='x:0', help_text='\u63a5\u53e3\u540d\u79f0\uff1a\u5339\u914d\u6570\u91cf', max_length=65535, verbose_name='\u901a\u75283\u6743\u9650', blank=True)),
+                ('xd3', models.TextField(default='x:0', help_text='\u63a5\u53e3\u540d\u79f0\uff1a\u5339\u914d\u6570\u91cf', max_length=65535, verbose_name='\u4fe1\u8d373\u6743\u9650', blank=True)),
+                ('ty4', models.TextField(default='x:0', help_text='\u63a5\u53e3\u540d\u79f0\uff1a\u5339\u914d\u6570\u91cf', max_length=65535, verbose_name='\u901a\u75284\u6743\u9650', blank=True)),
+                ('xd4', models.TextField(default='x:0', help_text='\u63a5\u53e3\u540d\u79f0\uff1a\u5339\u914d\u6570\u91cf', max_length=65535, verbose_name='\u4fe1\u8d374\u6743\u9650', blank=True)),
+                ('apicodes', models.CharField(default='', max_length=200, blank=True)),
+                ('level', models.CharField(default='', max_length=100, verbose_name='\u5ba2\u6237\u7ea7\u522b', blank=True)),
+                ('city', models.CharField(default='', max_length=50, verbose_name='\u5ba2\u6237\u603b\u90e8\u6240\u5728\u57ce\u5e02', blank=True)),
+                ('validate', models.CharField(default='', max_length=50, verbose_name='\u9a8c\u8bc1\u7801', blank=True)),
+                ('analyst', models.ForeignKey(related_name='Member.analyst', blank=True, to='account.Member', null=True)),
+                ('checker', models.OneToOneField(related_name='Member.checker', null=True, blank=True, to='account.Member')),
+                ('user', models.OneToOneField(to=settings.AUTH_USER_MODEL)),
+            ],
+            options={
+                'verbose_name': '\u7cfb\u7edf\u6210\u5458',
+                'verbose_name_plural': '\u6210\u5458\u5217\u8868',
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Queryer',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('username', models.CharField(default='', max_length=50, blank=True)),
+                ('password', models.CharField(default='', max_length=20, blank=True)),
+                ('apicode', models.CharField(default='', max_length=20, blank=True)),
+                ('is_busy', models.BooleanField(default=False)),
+                ('fileid', models.IntegerField(max_length=10, null=True, verbose_name='\u6e90\u6587\u4ef6', blank=True)),
+                ('taskid', models.CharField(default='', max_length=200, verbose_name='taskid', blank=True)),
+                ('mapinter', models.CharField(default='', max_length=500, verbose_name='\u5339\u914d\u63a5\u53e3', blank=True)),
+                ('start_time', models.DateTimeField(null=True, blank=True)),
+                ('end_time', models.DateTimeField(null=True, blank=True)),
+                ('member', models.OneToOneField(null=True, blank=True, to='account.Member', verbose_name='\u5206\u6790\u5e08')),
+            ],
+            options={
+                'verbose_name': '\u753b\u50cf\u5e10\u53f7',
+                'verbose_name_plural': '\u753b\u50cf\u5e10\u53f7\u5217\u8868',
+            },
+            bases=(models.Model,),
+        ),
+    ]

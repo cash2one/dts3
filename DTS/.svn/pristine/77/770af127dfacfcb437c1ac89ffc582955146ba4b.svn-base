@@ -1,0 +1,382 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+import os
+import logging
+import random
+import tasks
+import json
+import sys
+reload(sys)
+sys.setdefaultencoding("utf-8")
+
+from django.shortcuts import get_object_or_404
+from django.core.urlresolvers import reverse_lazy
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.views.generic import ListView, TemplateView
+from django.http import HttpResponseNotFound, JsonResponse, Http404
+from django.conf import settings
+from django.utils import timezone
+from django.db import transaction
+from django.core.files import File
+
+from celery.task.control import revoke
+# TODO celery4 from celery.worker.control import revoke, terminate
+
+from DTS.mixins import LoginRequiredMixin
+from DTS.views import send_mail
+from account.models import Member, Queryer
+from customer.models import SourceFile
+
+from .models import ReportFile, Interface, MappingedFile, WTasks
+from .utils import FileReader, redisconn
+
+
+logger = logging.getLogger('DTS')
+Z_COMMAND = "7za a -p%s -tzip %s %s"
+H_COMMAND = 'cp %s %s'
+TMP_PATH = settings.TMP_PATH
+conn = redisconn()
+
+
+class FileListView(LoginRequiredMixin, ListView):
+
+    paginate_by = 18
+    template_name = 'analyst/file_list.html'
+
+    def get_queryset(self):
+        if self.request.user.member.role != 2:
+            raise Http404
+        analyst = self.request.user.member
+        self.member_list = Member.objects.filter(analyst=analyst, role=1)
+        self.filename = self.request.GET.get('filename', '')
+        if self.filename:
+            return SourceFile.objects.filter(custom__in=self.member_list, filename__contains=self.filename)
+        return SourceFile.objects.filter(custom__in=self.member_list)
+
+    def get_context_data(self, **kwargs):
+        context = super(FileListView, self).get_context_data(**kwargs)
+        context['filename'] = self.filename
+        context['member_list'] = self.member_list
+        context['apicode_list'] = self.request.user.member.apicodes.split(',')
+        return context
+
+
+class ComListView(LoginRequiredMixin, ListView):
+
+    paginate_by = 18
+    template_name = 'analyst/com_list.html'
+    context_object_name = 'member_list'
+
+    def get_queryset(self):
+        if self.request.user.member.role != 2:
+            raise Http404
+        analyst = self.request.user.member
+        member_list = Member.objects.filter(analyst=analyst,role=1)
+        return member_list
+
+
+class ReportFileListView(LoginRequiredMixin, ListView):
+
+    paginate_by = 18
+    template_name = 'analyst/reportfile_list.html'
+    # context_object_name = 'member_list'
+
+    def get_queryset(self):
+        if self.request.user.member.role != 2:
+            raise Http404
+        self.pk = self.kwargs['pk']
+        file = get_object_or_404(SourceFile, pk=int(self.pk))
+        cus_name = file.custom.user.first_name
+        email = file.custom.user.email
+        self.cus_info = cus_name + ':' + email
+        return ReportFile.objects.filter(source_file=file)
+
+    def get_context_data(self, **kwargs):
+        context = super(ReportFileListView, self).get_context_data(**kwargs)
+        context['fileid'] = self.pk
+        context['cus_info'] = self.cus_info
+        return context
+
+
+class MapFileListView(LoginRequiredMixin, ListView):
+
+    paginate_by = 18
+    template_name = 'analyst/mapfile_list.html'
+    # context_object_name = 'member_list'
+
+    def get_queryset(self):
+        if self.request.user.member.role != 2:
+            raise Http404
+        self.pk = self.kwargs['pk']
+        file = get_object_or_404(SourceFile, pk=int(self.pk))
+        member = self.request.user.member
+        return MappingedFile.objects.filter(member=member, source_file=file)
+
+
+class UpReportFileView(LoginRequiredMixin, TemplateView):
+    # template_name = 'customer/file_list.html'
+    success_url = reverse_lazy('ana_reportfile_list')
+    # permission_required = 'reportfile.add_reportfile'
+
+    @method_decorator(csrf_exempt)
+    def dispatch(self, request, *args, **kwargs):
+        return super(UpReportFileView, self).dispatch(request, *args, **kwargs)
+
+    @transaction.atomic
+    def post(self, request, *args, **kwargs):
+        if not request.is_ajax():
+            return HttpResponseNotFound
+        fileid = request.POST.get('fileid', '')
+        file = request.FILES.get('reportfile', '')
+        extra_info = request.POST.get('extra_info', '')
+        if not file:
+            return JsonResponse({'msg': '请上传一个文件'})
+        source_file = get_object_or_404(SourceFile,pk=int(fileid))
+
+        with open(TMP_PATH + file.name, 'w') as f:
+            for chunk in file.chunks():
+                f.write(chunk)
+        zipfilename = os.path.splitext(file.name)[0]+'.7z'
+        password = random.randint(1000, 9999)
+        os.system(Z_COMMAND%(password, TMP_PATH+zipfilename, TMP_PATH + file.name))
+        customer = request.user.member
+        file_size = os.path.getsize(TMP_PATH + zipfilename)
+        content = """
+            <p>您好，</p>
+            <p>贵公司在百融金服公司的测试结果已完成，附件是分析报告，请查收！</p>
+            <p>稍后，百融金服的数据分析师会把文件的解压密码告知您。</p>
+            <p>系统邮件，请勿回复，谢谢！</p>
+            """
+        send_mail([source_file.custom.user.email], "百融金服数据测试报告", content, filepath=TMP_PATH+zipfilename)
+
+        ReportFile.objects.create(report_file=File(open(TMP_PATH + zipfilename)),
+                                  source_file=source_file, customer=request.user.member,
+                                  file_desc=extra_info, file_size=file_size, passwd=str(password))
+
+        os.remove(TMP_PATH + zipfilename)
+        os.remove(TMP_PATH + file.name)
+        logging.info(request.user.first_name+"上传了文件：" + file.name)
+        return JsonResponse({'msg': '0'})
+
+
+@login_required
+def getperm(request):
+    fileid = request.GET.get('fileid', '')
+    file = get_object_or_404(SourceFile, pk=int(fileid))
+    lines = file.total_lines
+    customer = file.custom
+
+    perm_ddd_list = [p.split(':')[0] for p in customer.permission.split(',')]
+    perm_num_ddd_list = [int(p.split(':')[1]) for p in customer.permission.split(',')]
+    ddd_dic = dict(zip(perm_ddd_list, perm_num_ddd_list))
+
+    perm_xd3_list = [p.split(':')[0] for p in customer.xd3.split(',')]
+    perm_num_xd3_list = [int(p.split(':')[1]) for p in customer.xd3.split(',')]
+    xd3_dic = dict(zip(perm_xd3_list, perm_num_xd3_list))
+
+    perm_ty3_list = [p.split(':')[0] for p in customer.ty3.split(',')]
+    perm_num_ty3_list = [int(p.split(':')[1]) for p in customer.ty3.split(',')]
+    ty3_dic = dict(zip(perm_ty3_list, perm_num_ty3_list))
+
+    perm_xd4_list = [p.split(':')[0] for p in customer.xd4.split(',')]
+    perm_num_xd4_list = [int(p.split(':')[1]) for p in customer.xd4.split(',')]
+    xd4_dic = dict(zip(perm_xd4_list, perm_num_xd4_list))
+
+    perm_ty4_list = [p.split(':')[0] for p in customer.ty4.split(',')]
+    perm_num_ty4_list = [int(p.split(':')[1]) for p in customer.ty4.split(',')]
+    ty4_dic = dict(zip(perm_ty4_list, perm_num_ty4_list))
+
+    ddd_list = Interface.objects.filter(name__in=perm_ddd_list)
+    xd3_list = Interface.objects.filter(name__in=perm_xd3_list)
+    ty3_list = Interface.objects.filter(name__in=perm_ty3_list)
+    ty4_list = Interface.objects.filter(name__in=perm_ty4_list)
+    xd4_list = Interface.objects.filter(name__in=perm_xd4_list)
+
+    fqz_code = [
+        'SpecialList_c', 'SpecialList_a', 'Execution',
+        'ApplyLoan', 'ApplyLoanStr','Location','TelecomCheck',
+        'LoanEquipment','EquipmentCheck','ApplyLoanMon',
+        'TotalDebt','QQGroup','EquipmentSpecialList'
+    ]
+    xy_code = [
+        'Stability_c', 'Consumption_c', 'Media_c', 'Accountchange',
+        'AccountchangeMonth', 'AccountChangeDer', 'PayConsumption',
+        'PayConsumptionDer', 'AirTravel', 'SocietyRelation',
+        'AccountChange_u', 'AccountChange_c'
+    ]
+    br_code = [
+        'brcreditpointv2', 'scorebank', 'scorep2p', 'scorecf',
+        'ScoreCust', 'scoreconsoff', 'scorepettycashv1', 'scoreconsoffv2',
+        'scorecreditbt', 'scorelargecashv2', 'scorelargecashv1'
+    ]
+    ddd = {}
+    for a in ddd_list.values('name', 'alias'):
+        ddd.update({a['name']: [a['alias'], ddd_dic[a['name']]]})
+    xd3 = {}
+    for a in xd3_list.values('name', 'alias'):
+        xd3.update({a['name']: [a['alias'], xd3_dic[a['name']]]})
+    fqz = {}
+    xy = {}
+    br = {}
+    for key in xd3:
+        if key in fqz_code:
+            fqz.update({key: [xd3[key], xd3_dic[key]]})
+        if key in xy_code:
+            xy.update({key: [xd3[key], xd3_dic[key]]})
+        if key in br_code:
+            br.update({key: [xd3[key], xd3_dic[key]]})
+
+    ty3 = {}
+    for a in ty3_list.values('name', 'alias'):
+        ty3.update({a['name']: [a['alias'], ty3_dic[a['name']]]})
+    xd4 = {}
+    for a in xd4_list.values('name', 'alias'):
+        xd4.update({a['name']: [a['alias'], xd4_dic[a['name']]]})
+    ty4 = {}
+    for a in ty4_list.values('name', 'alias'):
+        ty4.update({a['name']: [a['alias'], ty4_dic[a['name']]]})
+    return JsonResponse({'ddd': ddd, 'fqz': fqz, 'xy': xy, 'br': br,
+                         'ty3': ty3, 'xd4': xd4, 'ty4': ty4, 'lines': lines})
+
+
+@login_required
+def starcheck(request):
+    fileid = request.GET.get('fileid')
+    modal = request.GET.getlist('modal[]')
+    file = get_object_or_404(SourceFile, pk=int(fileid))
+    cus_username = file.custom.user.username
+    username = request.user.username
+    member = request.user.member
+    qer = member.queryer
+    file_fields = file.fields.split(',')
+    file_obj = FileReader(file, username)
+    if not file_obj.exist():
+        return JsonResponse({'msg': '文件丢失'})
+    if qer.is_busy:
+        if len(modal) == 1 and modal[0][0] == '1':
+            # 1海纳接口
+            inter = Interface.objects.get(name=modal[0])
+            if inter.fields:
+                modal_fields = inter.fields.split(',')
+                for key in modal_fields:
+                    if key not in file_fields:
+                        return JsonResponse({'msg': '缺少必要字段(接口需要字段:'+','.join(modal_fields)+')'})
+
+        WTasks.objects.create(username=username, modal=json.dumps(modal), fileid=file.id)
+    else:
+        if len(modal) == 1 and modal[0][0] == '1':
+            # 1海纳接口
+            inter = Interface.objects.get(name=modal[0])
+            if inter.fields:
+                modal_fields = inter.fields.split(',')
+                for key in modal_fields:
+                    if key not in file_fields:
+                        return JsonResponse({'msg': '缺少必要字段(接口需要字段:'+','.join(modal_fields)+')'})
+            filedata = file_obj.read_filedata()
+            rediskey = file_obj.tansform_filedata(filedata)    # 文件内容与标注字段对应生成列表字典
+            task = tasks.for_ice.delay(rediskey, file.id, member.id, modal, cus_username)
+        else:
+            filedata = file_obj.read_filedata()
+            rediskey = file_obj.tansform_filedata(filedata)    # 文件内容与标注字段对应生成列表字典
+            task = tasks.for_hx.delay(rediskey, file.id, member.id, modal, cus_username)
+        
+        qer.is_busy = True
+        qer.mapinter = ','.join([inter.alias for inter in Interface.objects.filter(name__in=modal)])
+        qer.fileid = file.id
+        qer.start_time = timezone.now()
+        qer.taskid = task.id
+        qer.save()
+    return JsonResponse({'msg': 0})
+
+
+class ScheduleView(LoginRequiredMixin, ListView):
+
+    # paginate_by = 18
+    template_name = 'analyst/schedule.html'
+    context_object_name = 'wtask_list'
+
+    def get_queryset(self):
+        if self.request.user.member.role != 2:
+            raise Http404
+        wtasks = WTasks.objects.all()
+        wtask_list = []
+        for t in wtasks:
+            username = t.username
+            modal = json.loads(t.modal)
+            fileid = t.fileid
+            mapinter = ','.join([inter.alias for inter in Interface.objects.filter(name__in=modal)])
+            file = get_object_or_404(SourceFile, pk=fileid)
+            filename = os.path.basename(file.filename.name)
+            total_lines = file.total_lines
+            wtask_list.append({'username': username, 'filename': filename, 'mapinter': mapinter,
+                               'total_lines': total_lines, 'id': t.id})
+        return wtask_list
+
+
+def get_taskschedule(request):
+    busys = Queryer.objects.filter(is_busy=True)
+    schedule_list = []
+    for qer in busys:
+        username = qer.member.user.username   
+        file = get_object_or_404(SourceFile, pk=qer.fileid)
+        filename = os.path.basename(file.filename.name)
+        mapinter = qer.mapinter
+        total_lines = file.total_lines 
+        surplus_lines = conn.llen(username)
+        percentage = "%.2f%%" % (float(total_lines-surplus_lines)/float(total_lines)*100)
+        schedule_list.append({'username': username, 'filename': filename, 'mapinter': mapinter,
+                              'total_lines': total_lines, 'percentage': percentage})
+
+    return JsonResponse({'msg': 0, 'sches': schedule_list})
+
+
+@login_required
+def stoptask(request):
+    username = request.GET.get('username')
+    user = User.objects.get(username=username)
+    if request.user != user:
+        return JsonResponse({'msg': '无权操作'})
+    qer = user.member.queryer
+    taskid = qer.taskid
+    revoke(taskid, terminate=True, singal='SIGKILL')
+    qer.is_busy = False
+    qer.taskid = ''
+    qer.fileid = None
+    qer.mapinter = ''
+    qer.save()
+    return JsonResponse({'msg': 0})
+
+
+@login_required
+def taskdel(request):
+    username = request.GET.get('username')
+    wtaskid = request.GET.get('wtaskid')
+
+    if username != request.user.username:
+        return JsonResponse({'msg': '无权操作'})
+
+    WTasks.objects.get(pk=int(wtaskid)).delete()
+    return JsonResponse({'msg': 0})
+
+
+@login_required
+def changecode(request):
+    username = request.GET.get('username')
+    apicode = request.GET.get('apicode')
+
+    if request.user.username != username or request.user.member.role != 2:
+        return JsonResponse({'msg': '无权操作'})
+
+    qer = request.user.member.queryer
+    if qer.is_busy:
+        return JsonResponse({'msg': '任务正在进行中，无法更换'})
+
+    qer.member = None
+    qer.save()
+    qer_change = Queryer.objects.get(apicode=apicode)
+    qer_change.member = request.user.member
+    qer_change.save()
+    return JsonResponse({'msg': 0})

@@ -1,0 +1,192 @@
+{% extends 'base.html' %}
+{% load bootstrap3 %}
+{% block title %}文件列表{% endblock %}
+{% block content %}
+
+	<button type="button" class="btn btn-primary" data-toggle="modal" data-target=".upfile">上传文件</button>
+	<table class="table table-hover table-striped" style="margin-top: 3px;">
+        <thead>
+            <tr>
+                <th>文件名称</th>
+                <th>字段</th>
+                <th>备注</th>
+                <th>行数</th>
+                <th>上传时间</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for file in page_obj %}
+                <tr>
+                    <td style="width:25%;text-overflow: ellipsis;" title="{{file}}"><a href="{% url 'down_checker_sourcefile' pk=file.id %}">{{ file| truncatechars:25 }}</a></td>
+                    <td style="width:20%;text-overflow: ellipsis;" title="{{file.fields}}">{{ file.fields | default_if_none:""|  truncatechars:25}}</td>
+                    <td style="width:15%;text-overflow: ellipsis;" title="{{file.extra_info}}">{{ file.extra_info | default_if_none:"" |  truncatechars:25}}</td>
+                    <td style="width:5%">{{ file.total_lines }}</td>
+                    <td style="width:15%">{{ file.create_time | date:"Y-m-d H:i:s" }}</td>            
+                    <td style="width:20%"><a class="deletefile" style="cursor:pointer" name="{{file.id}}">删除</a>&nbsp;&nbsp;
+                    <a  class="gethead" data-toggle="modal" data-target=".check" name="{{file.id}}" style="cursor:pointer">标注</a>&nbsp;&nbsp;<a href="{% url 'che_mapfile_list' pk=file.id %}" style="cursor:pointer">匹配结果</a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div align="center">
+        {% bootstrap_pagination page_obj url=request.path size="small" %}
+    </div>
+    <div class="modal fade upfile" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">上传文件</h4>
+            </div>
+            <div class="modal-body">
+                <form method="post" class="form" id="fileform" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {% if error%}
+                    <div class="alert alert-danger" role="alert">{{error}}</div>
+                    {% endif %}
+
+                    <div class="form-group">
+                        <label for="contact-name" class="control-label">客户名称:</label>
+                        <select id="apply-days" name="member_id" class="form-control" >
+                            {% for member in member_list%}
+                            <option value="{{member.id}}" >{{member.user.first_name}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="InputFile">选择文件:</label>
+                        <input type="file" id="InputFile" name="sourcefile" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="contact-name" class="control-label">友情提示:</label>
+                        <p>文件不得超过40万行</p>
+                        <p>文件编码必须为utf8格式</p>
+                        <P>详细规则请查看<a href="/docs/">文档</a></P>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="extra_info" class="control-label">备注：</label>
+                        <textarea id="extra_info" name="extra_info" class="form-control" rows="4" placeholder="..." ></textarea> 
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-success" id="upfile">确定</button>
+            </div>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="modal fade check" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">标注文件</h4>
+            </div>
+            <div class="modal-body">
+                {% if error%}
+                <div class="alert alert-danger" role="alert">{{error}}</div>
+                {% endif %}
+                <p style="color:red;">1.文件标注字段必须包含客户数据编号以及（身份证,手机,邮箱）三项中的一项。</p>
+                <p style="color:red;">2.申请日期字段对应的时间格式必须为：YYYY-MM-DD，如：2014-03-05。</p>
+                <div id="mydom">
+                
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal">取消</button>
+                <button type="button"  class="btn btn-success" autocomplete="off" id="labelfile">确定</button>
+            </div>
+        </div>
+      </div>
+    </div>
+
+
+{% endblock %}
+{% block js %}
+    <script>
+    $(document).ready(function () {
+
+        var opt = '<optgroup label="常用信息"><option value=\"cus_num\" >客户数据编号</option><option value=\"id\" >身份证号</option><option value=\"cell\" >手机号</option><option value=\"mail\" >电子邮箱</option><option value=\"name\" >姓名</option><option value=\"bank_card1\" >银行卡号1</option><option value=\"user_date\" >申请日期</option><option value=\"sl_user_data\" >特殊名单申请时间</option><option value=\"flag\" >客户的好坏标识</option><optgroup><optgroup label=\"地址信息\"><option value=\"apply_addr\" >申请地址</option><option value=\"home_addr\" >家庭住址</option><option value=\"civic_addr\" >户籍地址</option><option value=\"biz_addr\" >公司地址</option><option value=\"other_addr\" >其他地址</option><optgroup><optgroup label=\"个人信息\"><option value=\"qq_num\" >QQ号码</option><option value=\"passport_number\" >护照号码</option><option value=\"home_tel\" >家庭座机</option><option value=\"biz_tel\" >公司座机</option><option value=\"id_type\" >证件类型</option><option value=\"bank_card2\" >银行卡号2</option><option value=\"linkman_cell\" >联系人手机号</option><optgroup><optgroup label=\"车辆信息\"><option value=\"vehicle_id\" >车牌号</option><option value=\"car_code\" >车架号</option><option value=\"driver_number\">发动机号</option><option value=\"type_vehicle_id\">号牌种类</option><optgroup><optgroup label=\"企业信息\"><option value=\"biz_name\">公司名称</option><option value=\"reg_num\">企业注册号</option><option value=\"org_num\">组织机构代码</option><optgroup><optgroup label=\"设备信息\"><option value=\"event\" >事件类型</option><option value=\"af_swift_number\" >设备请求标识</option><option value=\"apply_type\" >申请渠道类型</option><option value=\"device_type\" >设备标识字段类型</option><option value=\"device_id\" >设备标识</option><optgroup><optgroup label=\"其他变量\"><option value=\"custApiCode\" >客户apicode</option><option value=\"other_var1\" >其他变量1</option><option value=\"other_var2\" >其他变量2</option><option value=\"other_var3\" >其他变量3</option><option value=\"other_var4\" >其他变量4</option><option value=\"other_var5\" >其他变量5</option><optgroup>'
+
+        $('#upfile').click(function () {
+            loading(true);
+            var data = new FormData($('#fileform').get(0));
+            $.ajax({  
+            url:"/checker/upfile/",  
+            type:"post",  
+            data:data,  
+            enctype: "multipart/form-data",
+            cache: false,  
+            processData: false,  
+            contentType: false,  
+            success:function(ret){
+                if (ret.msg == 0){
+                    location.reload();
+                } else {
+                    bootbox.alert(ret.msg);
+                    loading(false);
+                }
+            },  
+
+            });
+        });
+
+
+        $('.gethead').click(function () {
+            var fileid = $(this).attr("name");
+            var mydom = $('#mydom')
+            mydom.attr('name',fileid)
+            $.getJSON("{% url "gethead" %}", {fileid:fileid}, function (ret) {
+                var heads = ret.heads;
+                mydom.empty()
+                for(var i = 0; i < heads.length; i++) {
+                    var head = heads[i];
+                    mydom.append('<div class="form-group"><label for="'+head+'" class="control-label">'+head+':</label><select id="'+head+'" name="field" class="form-control" >'+opt+'</select></div>');
+                }
+            });
+        });
+
+
+        $('#labelfile').click(function () {
+            var fields = ''
+            $("select[name='field']").each(function(){
+                fields += $(this).val()+","
+            }); 
+            var fileid = $('#mydom').attr("name")
+            loading(true);
+            $.getJSON("{% url "savefields" %}", {fields:fields,fileid:fileid}, function (ret) {
+                if (ret.msg ==0 ){
+                    location.reload();
+                }else{
+                    loading(false);
+                    bootbox.alert(ret.msg);
+                }
+            });
+        });
+
+        $('.deletefile').click(function () {
+            var fileid = $(this).attr("name");
+            bootbox.confirm('确认删除吗？', function (result) {
+                if (result) {
+                    loading(true);
+                    $.getJSON("{% url "deletesourcefile" %}", {fileid:fileid}, function (ret) {
+                        if (ret.msg == 0) {
+                            location.reload();
+                        } 
+                    });
+                }
+            });
+        });
+
+
+
+    });
+    </script>
+{% endblock %}

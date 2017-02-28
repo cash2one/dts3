@@ -1,0 +1,20 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
+from django.db import models, migrations
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('account', '0012_auto_20170116_1642'),
+    ]
+
+    operations = [
+        migrations.AddField(
+            model_name='member',
+            name='validate',
+            field=models.CharField(max_length=50, null=True, verbose_name=b'\xe9\xaa\x8c\xe8\xaf\x81\xe7\xa0\x81', blank=True),
+            preserve_default=True,
+        ),
+    ]

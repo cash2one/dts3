@@ -1,0 +1,405 @@
+{% extends 'base.html' %}
+{% load bootstrap3 %}
+{% block title %}文件列表{% endblock %}
+{% block content %}
+
+
+	<table class="table table-hover table-striped" style="margin-top: 3px;">
+        <thead>
+            <tr>
+                <th>文件名称</th>
+                <th>字段</th>
+                <th>备注</th>
+                <th>行数</th>
+                <th>上传时间</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for file in page_obj %}
+                <tr>       
+                    <td style="width:30%;text-overflow: ellipsis;" title="{{file}}">{{ file| truncatechars:30 }}</td>
+                    <td style="width:20%;text-overflow: ellipsis;" title="{{file.fields}}">{{ file.fields | default_if_none:"" | truncatechars:25 }}</td>
+                    <td style="width:10%;text-overflow: ellipsis;" title="{{file.extra_info}}">{{ file.extra_info | default_if_none:"" | truncatechars:5 }}</td>
+                    <td style="width:5%">{{ file.total_lines }}</td>
+                    <td style="width:15%">{{ file.create_time | date:"Y-m-d H:i:s"}}</td>
+                    <td style="width:25%">
+                    {% if file.fields %}
+                    <a style="cursor:pointer" class="select" data-toggle="modal" data-target="#select" fileid="{{file.id}}">开始匹配</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="{% url 'ana_mapfile_list' pk=file.id %}" style="cursor:pointer">匹配结果</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="{% url 'ana_reportfile_list' pk=file.id %}" style="cursor:pointer">上传报告</a>
+                    {% else %}
+                    <a style="color:#E5E0E0;">开始匹配</a>&nbsp;&nbsp;&nbsp;&nbsp;<a style="cursor:pointer;color:#E5E0E0;">匹配结果</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="{% url 'ana_reportfile_list' pk=file.id %}" style="cursor:pointer">上传报告</a>
+                    {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div align="center">
+        {% bootstrap_pagination page_obj url=request.path size="small" %}
+    </div>
+    
+    <div class="modal fade" id="select" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+      <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">匹配文件</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group" >
+                    <label for="interface" class="control-label">接口名称:</label>
+                    <select id="interface" name="interface" class="form-control">
+                        <option value="ty3" >通用版接口3.0</option>
+                        <option value="xd3" >信贷版接口3.0</option>
+                        <option value="ty4" >通用版接口4.0</option>
+                        <option value="xd4" >信贷版接口4.0</option>
+                        <option value="ddd" >单独调用</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal">取消</button>
+                <button type="button"  class="btn btn-success" autocomplete="off" id="match1" fileid="">确定</button>
+            </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="ty3" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+      <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">通用版接口3.0<span style="color:red;">(不可选表示匹配数量超限)</span></h4>
+            </div>
+            <div class="modal-body" id="ty3modal">
+
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal">取消</button>
+                <button type="button"  class="btn btn-success" autocomplete="off" id="ty3match">确定</button>
+            </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="xd3" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+      <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">信贷版接口3.0<span style="color:red;">(不可选表示匹配数量超限)</span></h4>
+            </div>
+            <div class="modal-body">
+                <label for="fqz3" class="control-label"> 反欺诈:</label>
+                <div id="fqz3">
+                    
+                </div>
+                <label for="yhxy3" class="control-label">信用评估:</label>
+                <div id="xy3">
+                    
+                </div>
+                <label for="br3" class="control-label">百融评分:</label>
+                <div id="br3">
+                    
+                </div>  
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal">取消</button>
+                <button type="button"  class="btn btn-success" autocomplete="off" id="xd3match">确定</button>
+            </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="ty4" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+      <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">通用版接口4.0<span style="color:red;">(不可选表示匹配数量超限)</span></h4>
+            </div>
+            <div class="modal-body" id="ty4modal">
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal">取消</button>
+                <button type="button"  class="btn btn-success" autocomplete="off" id="ty4match">确定</button>
+            </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="xd4" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+      <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">信贷版接口4.0<span style="color:red;">(不可选表示匹配数量超限)</span></h4>
+            </div>
+            <div class="modal-body" id="xd4modal">
+                
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal">取消</button>
+                <button type="button"  class="btn btn-success" autocomplete="off" id="xd4match">确定</button>
+            </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="ddd" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+      <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">单独调用<span style="color:red;">(不可选表示匹配数量超限)</span></h4>
+            </div>
+            <div class="modal-body" >
+                <select  class="form-control" id="dddmodal">
+
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal">取消</button>
+                <button type="button"  class="btn btn-success" autocomplete="off" id="dddmatch">确定</button>
+            </div>
+        </div>
+      </div>
+    </div>
+
+
+{% endblock %}
+{% block js %}
+    <script>
+    $(document).ready(function () {
+
+        $('.select').click(function () {
+            var fileid = $(this).attr("fileid");
+            var mydom = $('#match1');
+            mydom.attr('fileid',fileid);
+        });
+
+        $('#match1').click(function () {
+            var interface = $("#interface").val();
+            var fileid = $(this).attr("fileid");
+            $('#select').modal('hide');
+            $.getJSON("{% url "getpermission" %}", {fileid:fileid}, function (ret) {
+                var ddd_dic = ret.ddd;
+                var fqz_dic = ret.fqz;
+                var xy_dic = ret.xy;
+                var br_dic = ret.br;
+                var ty3_dic = ret.ty3;
+                var xd4_dic = ret.xd4;
+                var ty4_dic = ret.ty4;
+                var lines = ret.lines;
+
+                if(interface=='ty3'){
+                    $("#ty3").modal('show');
+                    var mydom = $('#ty3match');
+                    mydom.attr('fileid',fileid);
+                    var ty3dom = $('#ty3modal');
+                    ty3dom.empty()
+                    for(var key in ty3_dic) {
+                        if(ty3_dic[key][1]>lines){
+                            ty3dom.append('<input name="checkty3" type="checkbox" value="'+key+'"/><span>'+ty3_dic[key][0]+'</span>&nbsp;&nbsp;&nbsp;&nbsp;');
+                        }else{
+                            ty3dom.append('<input disabled="disabled" name="checkty3" type="checkbox" value="'+key+'"/><span>'+ty3_dic[key][0]+'</span>&nbsp;&nbsp;&nbsp;&nbsp;');
+                        }
+                    }
+                }else if (interface=='xd3'){
+                    $("#xd3").modal('show');
+                    var mydom = $('#xd3match');
+                    mydom.attr('fileid',fileid);
+                    var fqz3dom = $('#fqz3');
+                    fqz3dom.empty()
+                    for(var key in fqz_dic) {
+                        if(fqz_dic[key][1]>lines){
+                            fqz3dom.append('<input name="checkxd3" type="checkbox" value="'+key+'"/><span>'+fqz_dic[key][0][0]+'</span>&nbsp;&nbsp;&nbsp;&nbsp;');
+                        }else{
+                            fqz3dom.append('<input disabled="disabled" name="checkxd3" type="checkbox" value="'+key+'"/><span>'+fqz_dic[key][0][0]+'</span>&nbsp;&nbsp;&nbsp;&nbsp;');
+                        }
+                    }
+                    var xy3dom = $('#xy3');
+                    xy3dom.empty()
+                    for(var key in xy_dic) {
+                        if(xy_dic[key][1]>lines){
+                            xy3dom.append('<input name="checkxd3" type="checkbox" value="'+key+'"/><span>'+xy_dic[key][0][0]+'</span>&nbsp;&nbsp;&nbsp;&nbsp;');
+                        }else{
+                            xy3dom.append('<input disabled="disabled" name="checkxd3" type="checkbox" value="'+key+'"/><span>'+xy_dic[key][0][0]+'</span>&nbsp;&nbsp;&nbsp;&nbsp;');
+                        }
+                    }
+                    var br3dom = $('#br3');
+                    br3dom.empty()
+                    for(var key in br_dic) {
+                        if(br_dic[key][1]>lines){
+                            br3dom.append('<input name="checkxd3" type="checkbox" value="'+key+'"/><span>'+br_dic[key][0][0]+'</span>&nbsp;&nbsp;&nbsp;&nbsp;');
+                        }else{
+                            br3dom.append('<input disabled="disabled" name="checkxd3" type="checkbox" value="'+key+'"/><span>'+br_dic[key][0][0]+'</span>&nbsp;&nbsp;&nbsp;&nbsp;');
+                        }
+                    }
+
+                }else if (interface=='ty4'){
+                    $("#ty4").modal('show');
+                    var mydom = $('#ty4match');
+                    mydom.attr('fileid',fileid);
+                    var ty4dom = $('#ty4modal');
+                    ty4dom.empty()
+                    for(var key in ty4_dic) {
+                        if(ty4_dic[key][1]>lines){
+                            ty4dom.append('<input name="checkty4" type="checkbox" value="'+key+'"/><span>'+ty4_dic[key][0]+'</span>&nbsp;&nbsp;&nbsp;&nbsp;');
+                        }else{
+                            ty4dom.append('<input disabled="disabled" name="checkty4" type="checkbox" value="'+key+'"/><span>'+ty4_dic[key][0]+'</span>&nbsp;&nbsp;&nbsp;&nbsp;');
+                        }
+                    }
+                }else if (interface=='xd4'){
+                    $("#xd4").modal('show');
+                    var mydom = $('#xd4match');
+                    mydom.attr('fileid',fileid);
+
+                    var xd4dom = $('#xd4modal');
+                    xd4dom.empty()
+                    for(var key in xd4_dic) {
+                        if(xd4_dic[key][1]>lines){
+                            xd4dom.append('<input name="checkxd4" type="checkbox" value="'+key+'"/><span>'+xd4_dic[key][0]+'</span>&nbsp;&nbsp;&nbsp;&nbsp;');
+                        }else{
+                           xd4dom.append('<input disabled="disabled" name="checkxd4" type="checkbox" value="'+key+'"/><span>'+xd4_dic[key][0]+'</span>&nbsp;&nbsp;&nbsp;&nbsp;'); 
+                        }
+                    }
+                }else {
+                    $("#ddd").modal('show');
+                    var mydom = $('#dddmatch');
+                    mydom.attr('fileid',fileid);
+
+                    var ddddom = $('#dddmodal');
+                    ddddom.empty()
+                    for(var key in ddd_dic) {
+                        if (ddd_dic[key][1]>lines) {
+                            ddddom.append('<option value="'+key+'" >'+ddd_dic[key][0]+'</option>');
+                        }else{
+                            ddddom.append('<option disabled="disabled" value="'+key+'" >'+ddd_dic[key][0]+'</option>');
+                        }
+                        
+                    }
+                }
+            });
+        }); 
+
+        $('#ty3match').click(function () {
+            var fileid = $(this).attr("fileid");
+            var check_val = []; 
+            $('input[name="checkty3"]:checked').each(function(){ 
+                check_val.push($(this).val()); 
+            });
+
+            if (check_val.length == 0) {
+                bootbox.alert('请选择要匹配的接口');
+            }else{
+                loading(true);
+                $.getJSON("{% url "starcheck" %}", {fileid:fileid, modal:check_val}, function (ret) {
+                    if(ret.msg==0){
+                        location.reload();
+                    }else{
+                        loading(false);
+                        bootbox.alert(ret.msg);
+                    }
+                });
+            }
+            
+        });
+         
+        $('#xd3match').click(function () {
+            var fileid = $(this).attr("fileid");
+            var check_val = []; 
+            $('input[name="checkxd3"]:checked').each(function(){ 
+                check_val.push($(this).val()); 
+            });
+            if (check_val.length == 0) {
+                bootbox.alert('请选择要匹配的接口');
+            }else{
+                loading(true);
+                $.getJSON("{% url "starcheck" %}", {fileid:fileid, modal:check_val}, function (ret) {
+                    if(ret.msg==0){
+                        location.reload();
+
+                    }else{
+                        loading(false);
+                        bootbox.alert(ret.msg);
+                    }
+                });
+            }
+            
+
+        });
+
+        $('#ty4match').click(function () {
+            var fileid = $(this).attr("fileid");
+            var check_val = []; 
+            $('input[name="checkty4"]:checked').each(function(){ 
+                check_val.push($(this).val()); 
+            });
+            if (check_val.length == 0) {
+                bootbox.alert('请选择要匹配的接口');
+            }else{
+                loading(true);
+                $.getJSON("{% url "starcheck" %}", {fileid:fileid, modal:check_val}, function (ret) {
+                    if(ret.msg==0){
+                        location.reload();
+                    }else{
+                        loading(false);
+                        bootbox.alert(ret.msg);
+                    }
+                });
+            }
+            
+
+        });
+
+        $('#xd4match').click(function () {
+            var fileid = $(this).attr("fileid");
+            var check_val = []; 
+            $('input[name="checkxd4"]:checked').each(function(){ 
+                check_val.push($(this).val()); 
+            });
+            if (check_val.length == 0) {
+                bootbox.alert('请选择要匹配的接口');
+            }else{
+                loading(true);
+                $.getJSON("{% url "starcheck" %}", {fileid:fileid, modal:check_val}, function (ret) {
+                    if(ret.msg==0){
+                        location.reload();
+                    }else{
+                        loading(false);
+                        bootbox.alert(ret.msg);
+                    }
+                });
+            }
+            
+
+        });
+
+        $('#dddmatch').click(function () {
+            var fileid = $(this).attr("fileid");
+            var check_val = [];
+            check_val.push($('#dddmodal').val());
+            if (check_val.length == 0) {
+                bootbox.alert('请选择要匹配的接口');
+            }else{
+                loading(true);
+                $.getJSON("{% url "starcheck" %}", {fileid:fileid, modal:check_val}, function (ret) {
+                    if(ret.msg==0){
+                        location.reload();
+                    }else{
+                        loading(false);
+                        bootbox.alert(ret.msg);
+                    }
+                });
+            }
+            
+        });  
+
+    });
+    </script>
+{% endblock %}

@@ -1,0 +1,53 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
+from django.db import models, migrations
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('account', '0017_auto_20170122_1525'),
+        ('customer', '0002_auto_20170122_1515'),
+    ]
+
+    operations = [
+        migrations.CreateModel(
+            name='MappingedFile',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('file', models.FileField(max_length=500, upload_to=b'mappinged_file/%Y/%m')),
+                ('file_size', models.IntegerField(max_length=4)),
+                ('file_from', models.CharField(max_length=300, null=True)),
+                ('is_crypt', models.BooleanField(default=False)),
+                ('create_time', models.DateTimeField(auto_now_add=True)),
+                ('customer', models.ForeignKey(blank=True, to='account.Member', null=True)),
+                ('source_file', models.ForeignKey(to='customer.SourceFile', null=True)),
+            ],
+            options={
+                'ordering': ['-create_time'],
+                'verbose_name': 'Mapping\u8f93\u51fa\u6587\u4ef6',
+                'verbose_name_plural': 'Mapping\u8f93\u51fa\u6587\u4ef6\u5217\u8868',
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='ReportFile',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('report_file', models.FileField(upload_to=b'report_file/%Y/%m')),
+                ('file_desc', models.CharField(max_length=300, null=True, blank=True)),
+                ('file_size', models.IntegerField(max_length=4)),
+                ('passwd', models.CharField(max_length=10)),
+                ('create_time', models.DateTimeField(auto_now_add=True)),
+                ('source_file', models.ForeignKey(to='customer.SourceFile', null=True)),
+                ('uploader', models.ForeignKey(related_name=b'reportfile_uploaders', to='account.Member')),
+            ],
+            options={
+                'ordering': ['-create_time'],
+                'verbose_name': '\u62a5\u544a\u6587\u4ef6',
+                'verbose_name_plural': '\u62a5\u544a\u6587\u4ef6\u5217\u8868',
+            },
+            bases=(models.Model,),
+        ),
+    ]

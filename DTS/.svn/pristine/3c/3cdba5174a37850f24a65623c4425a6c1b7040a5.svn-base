@@ -1,0 +1,19 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
+from django.db import models, migrations
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('customer', '0005_sourcefile_head'),
+    ]
+
+    operations = [
+        migrations.AlterField(
+            model_name='sourcefile',
+            name='filename',
+            field=models.FileField(max_length=800, upload_to=b'source_file/%Y/%m'),
+        ),
+    ]

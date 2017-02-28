@@ -1,0 +1,19 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
+from django.db import models, migrations
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('account', '0008_auto_20170116_1501'),
+    ]
+
+    operations = [
+        migrations.AlterField(
+            model_name='member',
+            name='role',
+            field=models.IntegerField(default=0, max_length=1, choices=[(0, b'Custom'), (1, b'Analyst'), (2, b'Checker')]),
+        ),
+    ]

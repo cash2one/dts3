@@ -1,0 +1,32 @@
+# -*- coding: utf-8 -*-
+import os
+
+from django.db import models
+from account.models import Member
+from django.core.urlresolvers import reverse
+
+
+class SourceFile(models.Model):
+    custom = models.ForeignKey(Member, limit_choices_to={'member__role': 1})
+    filename = models.FileField(max_length=800, upload_to='source_file/%Y/%m')
+    extra_info = models.CharField(max_length=300, null=True, blank=True)
+    fields = models.CharField(max_length=1000, null=True, blank=True, verbose_name='标注字段')
+    head = models.CharField(max_length=1000, null=True, blank=True, verbose_name='文件表头')
+    total_lines = models.IntegerField(max_length=8, null=True, blank=True)
+    file_size = models.IntegerField(max_length=4, null=True, blank=True)
+    create_time = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = '源文件'
+        verbose_name_plural = '源文件列表'
+        permissions = (
+            ('assign_cus', 'Can assign customer'),
+            ('assign_che', 'Can assign checker'),
+        )
+        ordering = ['-create_time']
+
+    def __unicode__(self):
+        return u'%s' % os.path.basename(self.filename.name)
+
+    def get_absolute_url(self):
+        return reverse('cus_reportfile_list', kwargs={'pk': self.pk})

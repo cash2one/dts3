@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% load bootstrap3 %}
+{% block title %}文件列表{% endblock %}
+{% block content %}
+
+	<button type="button" class="btn btn-primary" data-toggle="modal" data-target=".upfile">上传文件</button>
+
+	<table class="table table-hover table-striped" style="margin-top: 3px;">
+        <thead>
+            <tr>
+                <th>文件名称</th>
+                <th>备注</th>
+                <th>行数</th>
+                <th>上传时间</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for file in page_obj %}
+                <tr>       
+                    <!-- <td title="{{ file.filename.filename }}"><a href="{{ file.get_absolute_url }}">{{ file.filename.filename | truncatechars:18 }}</a></td> -->
+                    <td style="width:35%">{{ file| truncatechars:40 }}</td>
+                    <td style="width:20%">{{ file.extra_info | default_if_none:"" | truncatechars:30}}</td>
+                    <td style="width:10%">{{ file.total_lines }}</td>
+                    <td style="width:25%">{{ file.create_time | date:"Y-m-d H:i:s" }}</td>
+                    <td style="width:15%"><a href="{{ file.get_absolute_url }}" style="cursor:pointer">查看报告</a></td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div align="center">
+        {% bootstrap_pagination page_obj url=request.path size="small" %}
+    </div>
+    <div class="modal fade upfile" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">上传文件</h4>
+            </div>
+            <div class="modal-body">
+                <form action="/customer/upfile/" method="post" class="form" id="fileform" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {% if error%}
+                    <div class="alert alert-danger" role="alert">{{error}}</div>
+                    {% endif %}
+                    <div class="form-group">
+                        <label for="InputFile">选择文件:</label>
+                        <input type="file" id="InputFile" name="sourcefile" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="contact-name" class="control-label">友情提示:</label>
+                        <p>文件不得超过40万行</p>
+                        <p>文件编码必须为utf8格式</p>
+                        <P>详细规则请查看<a href="/docs/">文档</a></P>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="extra_info" class="control-label">备注：</label>
+                        <textarea id="extra_info" name="extra_info" class="form-control" rows="4" placeholder="..." ></textarea> 
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal">取消</button>
+                <button type="button" id="upfile" data-loading-text="Loading..." class="btn btn-success" autocomplete="off">确定</button>
+            </div>
+        </div>
+      </div>
+    </div>
+
+{% endblock %}
+{% block js %}
+    <script>
+    $(document).ready(function () {
+        $('#upfile').on('click', function (){
+            loading(true);
+            var data = new FormData($('#fileform').get(0));
+            $.ajax({  
+            url:"/customer/upfile/",  
+            type:"post",  
+            data:data,  
+            enctype: "multipart/form-data",
+            cache: false,  
+            processData: false,  
+            contentType: false,  
+            success:function(ret){
+                if (ret.msg == 0){
+                    location.reload();
+                } else {
+                    loading(false);
+                    bootbox.alert(ret.msg);
+                }
+            },  
+            });
+            
+        });
+    });
+    </script>
+{% endblock %}

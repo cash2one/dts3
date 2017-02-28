@@ -1,0 +1,30 @@
+[2017-02-21 19:04:46,590] ERROR DTS : 上传excel文件失败Traceback (most recent call last):
+  File "/home/zy/Project/DTS/checker/views.py", line 81, in post
+    encod = chardet.detect(sheet.row_values(0))
+  File "/home/zy/Django1.7/local/lib/python2.7/site-packages/chardet/__init__.py", line 30, in detect
+    u.feed(aBuf)
+  File "/home/zy/Django1.7/local/lib/python2.7/site-packages/chardet/universaldetector.py", line 108, in feed
+    if self._highBitDetector.search(aBuf):
+TypeError: expected string or buffer
+
+[2017-02-21 19:05:29,068] ERROR DTS : 上传excel文件失败Traceback (most recent call last):
+  File "/home/zy/Project/DTS/checker/views.py", line 81, in post
+    encod = chardet.detect(sheet.row_values(0)[0])
+  File "/home/zy/Django1.7/local/lib/python2.7/site-packages/chardet/__init__.py", line 25, in detect
+    raise ValueError('Expected a bytes object, not a unicode object')
+ValueError: Expected a bytes object, not a unicode object
+
+[2017-02-21 19:06:22,246] ERROR DTS : 上传excel文件失败Traceback (most recent call last):
+  File "/home/zy/Project/DTS/checker/views.py", line 82, in post
+    encod = chardet.detect(head)
+  File "/home/zy/Django1.7/local/lib/python2.7/site-packages/chardet/__init__.py", line 25, in detect
+    raise ValueError('Expected a bytes object, not a unicode object')
+ValueError: Expected a bytes object, not a unicode object
+
+[2017-02-21 19:06:47,743] ERROR DTS : 上传excel文件失败Traceback (most recent call last):
+  File "/home/zy/Project/DTS/checker/views.py", line 82, in post
+    encod = chardet.detect(head)
+  File "/home/zy/Django1.7/local/lib/python2.7/site-packages/chardet/__init__.py", line 25, in detect
+    raise ValueError('Expected a bytes object, not a unicode object')
+ValueError: Expected a bytes object, not a unicode object
+

@@ -1,0 +1,29 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
+from django.db import models, migrations
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('analyst', '0009_remove_mappingedfile_is_crypt'),
+    ]
+
+    operations = [
+        migrations.RenameField(
+            model_name='mappingedfile',
+            old_name='customer',
+            new_name='member',
+        ),
+        migrations.RemoveField(
+            model_name='mappingedfile',
+            name='file_from',
+        ),
+        migrations.AddField(
+            model_name='mappingedfile',
+            name='interface',
+            field=models.CharField(max_length=800, null=True),
+            preserve_default=True,
+        ),
+    ]

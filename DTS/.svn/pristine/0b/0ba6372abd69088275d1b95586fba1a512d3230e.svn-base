@@ -1,0 +1,30 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
+from django.db import models, migrations
+from django.conf import settings
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('account', '0016_auto_20170122_1523'),
+    ]
+
+    operations = [
+        migrations.AlterField(
+            model_name='member',
+            name='analyst',
+            field=models.ForeignKey(related_name=b'Member.analyst', blank=True, to='account.Member', null=True),
+        ),
+        migrations.AlterField(
+            model_name='member',
+            name='checker',
+            field=models.OneToOneField(related_name=b'Member.checker', null=True, blank=True, to='account.Member'),
+        ),
+        migrations.AlterField(
+            model_name='member',
+            name='user',
+            field=models.OneToOneField(to=settings.AUTH_USER_MODEL),
+        ),
+    ]

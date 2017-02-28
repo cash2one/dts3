@@ -1,0 +1,30 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
+from django.db import models, migrations
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('customer', '0002_auto_20170122_1515'),
+    ]
+
+    operations = [
+        migrations.AlterModelOptions(
+            name='sourcefile',
+            options={'ordering': ['-create_time'], 'verbose_name': '\u6e90\u6587\u4ef6', 'verbose_name_plural': '\u6e90\u6587\u4ef6\u5217\u8868', 'permissions': (('assign_cus', 'Can assign customer'), ('assign_che', 'Can assign checker'))},
+        ),
+        migrations.AddField(
+            model_name='sourcefile',
+            name='loan_amount',
+            field=models.CharField(max_length=200, null=True, verbose_name=b'\xe8\xb4\xb7\xe6\xac\xbe\xe4\xba\xa7\xe5\x93\x81\xe9\xa2\x9d\xe5\xba\xa6', blank=True),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='sourcefile',
+            name='loan_deadline',
+            field=models.CharField(max_length=200, null=True, verbose_name=b'\xe8\xb4\xb7\xe6\xac\xbe\xe4\xba\xa7\xe5\x93\x81\xe6\x9c\x9f\xe9\x99\x90', blank=True),
+            preserve_default=True,
+        ),
+    ]

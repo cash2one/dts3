@@ -1,0 +1,104 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
+from django.db import models, migrations
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('account', '0007_auto_20161229_1716'),
+    ]
+
+    operations = [
+        migrations.AlterModelOptions(
+            name='member',
+            options={'verbose_name': '\u7cfb\u7edf\u6210\u5458', 'verbose_name_plural': '\u6210\u5458\u5217\u8868'},
+        ),
+        migrations.AlterModelOptions(
+            name='queryer',
+            options={'ordering': ['-id'], 'verbose_name': '\u753b\u50cf\u5e10\u53f7', 'verbose_name_plural': '\u753b\u50cf\u5e10\u53f7\u5217\u8868'},
+        ),
+        migrations.RenameField(
+            model_name='queryer',
+            old_name='doing',
+            new_name='dofile',
+        ),
+        migrations.RemoveField(
+            model_name='member',
+            name='assrole',
+        ),
+        migrations.RemoveField(
+            model_name='member',
+            name='ips',
+        ),
+        migrations.RemoveField(
+            model_name='member',
+            name='validate',
+        ),
+        migrations.RemoveField(
+            model_name='queryer',
+            name='create_time',
+        ),
+        migrations.RemoveField(
+            model_name='queryer',
+            name='total_lines',
+        ),
+        migrations.AddField(
+            model_name='member',
+            name='allow_ips',
+            field=models.TextField(max_length=800, null=True, blank=True),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='member',
+            name='analyst',
+            field=models.ForeignKey(related_name=b'Member.analyst', blank=True, to='account.Member', null=True),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='member',
+            name='checker',
+            field=models.OneToOneField(related_name=b'Member.checker', null=True, blank=True, to='account.Member'),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='member',
+            name='city',
+            field=models.CharField(max_length=50, null=True, verbose_name=b'\xe5\xae\xa2\xe6\x88\xb7\xe6\x80\xbb\xe9\x83\xa8\xe6\x89\x80\xe5\x9c\xa8\xe5\x9f\x8e\xe5\xb8\x82', blank=True),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='member',
+            name='level',
+            field=models.CharField(max_length=100, null=True, verbose_name=b'\xe5\xae\xa2\xe6\x88\xb7\xe7\xba\xa7\xe5\x88\xab', blank=True),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='member',
+            name='taskid',
+            field=models.CharField(max_length=200, null=True, verbose_name=b'taskid', blank=True),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='queryer',
+            name='end_time',
+            field=models.DateTimeField(null=True, blank=True),
+            preserve_default=True,
+        ),
+        migrations.AlterField(
+            model_name='member',
+            name='permission',
+            field=models.TextField(help_text=b'\xe6\x8e\xa5\xe5\x8f\xa3\xe5\x90\x8d\xe7\xa7\xb0\xef\xbc\x9a\xe5\x8c\xb9\xe9\x85\x8d\xe6\x95\xb0\xe9\x87\x8f', max_length=99999999, null=True, verbose_name=b'\xe6\x8e\xa5\xe5\x8f\xa3\xe6\x9d\x83\xe9\x99\x90', blank=True),
+        ),
+        migrations.AlterField(
+            model_name='member',
+            name='role',
+            field=models.IntegerField(default=0, max_length=1, choices=[(0, b'Custom'), (2, b'Analysts'), (1, b'Checker')]),
+        ),
+        migrations.AlterField(
+            model_name='queryer',
+            name='user',
+            field=models.OneToOneField(null=True, blank=True, to='account.Member', verbose_name=b'\xe5\x88\x86\xe6\x9e\x90\xe5\xb8\x88'),
+        ),
+    ]

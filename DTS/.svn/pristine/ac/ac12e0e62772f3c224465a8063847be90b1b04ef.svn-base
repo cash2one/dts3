@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}个人信息{% endblock %}
+{% block content %}
+    <table class="table table-bordered table-hover" style="margin-top: 5px;">
+        <tbody>
+            <tr>
+                <th scope="row">姓名</th>
+                <td>{{ user.first_name }}</td>
+            </tr>
+            <tr>
+                <th scope="row">账号</th>
+                <td>{{ user.username }}</td>
+            </tr>
+            <tr>
+                <th scope="row">角色</th>
+                <td>{{ user.member.get_role_display }}</td>
+            </tr>
+            <tr>
+                <th scope="row">邮箱</th>
+                <td>{{ user.email }}</td>
+            </tr>
+            {% if user.member.role == 1 %}
+            <tr>
+                <th scope="row">画像账号</th>
+                <td>{{ user.member.queryer.apicode }}</td>
+            </tr>
+            {% endif %}
+            <tr>
+                <th scope="row">分析师名称</th>
+                <td>{{ user.member.analyst.user.first_name }}</td>
+            </tr>
+            <tr>
+                <th scope="row">分析师邮箱</th>
+                <td>{{ user.member.analyst.user.email }}</td>
+            </tr>
+
+        </tbody>
+    </table>
+{% endblock %}

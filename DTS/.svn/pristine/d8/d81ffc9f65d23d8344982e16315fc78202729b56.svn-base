@@ -1,0 +1,20 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
+from django.db import models, migrations
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('account', '0027_auto_20170207_1152'),
+    ]
+
+    operations = [
+        migrations.AddField(
+            model_name='member',
+            name='ty3',
+            field=models.TextField(default=b'', help_text=b'\xe6\x8e\xa5\xe5\x8f\xa3\xe5\x90\x8d\xe7\xa7\xb0\xef\xbc\x9a\xe5\x8c\xb9\xe9\x85\x8d\xe6\x95\xb0\xe9\x87\x8f', max_length=65535, verbose_name=b'\xe9\x80\x9a\xe7\x94\xa83\xe6\x9d\x83\xe9\x99\x90', blank=True),
+            preserve_default=True,
+        ),
+    ]

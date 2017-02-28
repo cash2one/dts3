@@ -1,0 +1,20 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
+from django.db import models, migrations
+from django.conf import settings
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('account', '0003_auto_20161228_1716'),
+    ]
+
+    operations = [
+        migrations.AlterField(
+            model_name='member',
+            name='assrole',
+            field=models.ForeignKey(related_name=b'Member.assrole', blank=True, to=settings.AUTH_USER_MODEL, help_text=b'\xe5\xae\xa2\xe6\x88\xb7\xe5\x85\xb3\xe8\x81\x94cheecker,checker\xe5\x85\xb3\xe8\x81\x94\xe5\x88\x86\xe6\x9e\x90\xe5\xb8\x88', null=True, verbose_name=b'\xe5\x85\xb3\xe8\x81\x94\xe8\xa7\x92\xe8\x89\xb2'),
+        ),
+    ]

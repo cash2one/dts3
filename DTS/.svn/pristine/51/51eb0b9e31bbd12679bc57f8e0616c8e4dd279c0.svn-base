@@ -1,0 +1,24 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
+from django.db import models, migrations
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('analyst', '0010_auto_20170213_1426'),
+    ]
+
+    operations = [
+        migrations.RemoveField(
+            model_name='mappingedfile',
+            name='interface',
+        ),
+        migrations.AddField(
+            model_name='mappingedfile',
+            name='mapinter',
+            field=models.CharField(default=b'', max_length=800, verbose_name=b'\xe5\x8c\xb9\xe9\x85\x8d\xe6\x8e\xa5\xe5\x8f\xa3', blank=True),
+            preserve_default=True,
+        ),
+    ]

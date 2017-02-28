@@ -1,0 +1,183 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+import os
+import time
+import xlrd
+import logging
+import traceback
+import re
+import chardet
+
+from django.shortcuts import get_object_or_404
+from django.core.urlresolvers import reverse_lazy
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import login_required
+from django.views.generic import ListView, TemplateView
+from django.http import HttpResponseNotFound, JsonResponse, Http404
+from django.db import transaction
+
+from DTS.mixins import LoginRequiredMixin
+from account.models import Member
+from customer.models import SourceFile
+from analyst.models import MappingedFile
+from analyst.utils import iter_xls
+
+
+logger = logging.getLogger('DTS')
+
+
+class FileListView(LoginRequiredMixin, ListView):
+
+    paginate_by = 18
+    template_name = 'checker/file_list.html'
+
+    def get_queryset(self):
+        if self.request.user.member.role != 0:
+            raise Http404
+        analyst = self.request.user.member.analyst     
+        self.member_list = Member.objects.filter(analyst=analyst, role=1)
+        self.filename = self.request.GET.get('filename', '')
+        sourcefile = SourceFile.objects.filter(custom__in=self.member_list)
+        if self.filename:
+            sourcefile = SourceFile.objects.filter(custom__in=self.member_list,filename__contains=self.filename)
+        return sourcefile
+
+    def get_context_data(self, **kwargs):
+        context = super(FileListView, self).get_context_data(**kwargs)
+        context['filename'] = self.filename
+        context['member_list'] = self.member_list
+        return context
+
+
+class UpFileView(LoginRequiredMixin, TemplateView):
+    # template_name = 'checker/file_list.html'
+    success_url = reverse_lazy('che_file_list')
+
+    @method_decorator(csrf_exempt)
+    def dispatch(self, request, *args, **kwargs):
+        return super(UpFileView, self).dispatch(request, *args, **kwargs)
+
+    @transaction.atomic
+    def post(self, request, *args, **kwargs):
+        if not request.is_ajax():
+            return HttpResponseNotFound
+        file = request.FILES.get('sourcefile', '')
+        extra_info = request.POST.get('extra_info', '')
+        member_id = request.POST.get('member_id', '')
+
+        if not member_id:
+            return JsonResponse({'msg': '请选择一个客户'})
+        if not file:
+            return JsonResponse({'msg': '请上传一个文件'})
+
+        basename, suffix = os.path.splitext(file.name)
+        if suffix not in ['.txt', '.xlsx', '.xls', '.csv']:
+            return JsonResponse({'msg':'文件格式必须为txt,xlsx,xls,csv'})
+        if suffix in ['.xls', '.xlsx']:
+            excel = xlrd.open_workbook(file.temporary_file_path())
+            sheet = excel.sheet_by_index(0)
+            total_lines = sheet.nrows
+            try:
+                head = ','.join(sheet.row_values(0))
+            except Exception:
+                logger.error('上传excel文件失败'+traceback.format_exc())
+                return JsonResponse({"msg":"文件第一行有误"})
+        else:
+            head = file.readline().strip('\n')
+            total_lines = len(file.readlines())
+
+        if total_lines > 400000:
+            return JsonResponse({'msg': '文件行数不能超过400000'})
+
+        if total_lines < 2:
+            return JsonResponse({'msg': '文件行数不能少于2行'})
+
+        member = Member.objects.get(pk=int(member_id))
+        sf = SourceFile(custom=member, filename=file, extra_info=extra_info,
+                        file_size=file.size, total_lines=total_lines, head=head)
+        filename = '_'.join([member.user.first_name, basename, time.strftime('%Y%m%d-%H%M')]) + suffix
+        sf.filename.save(filename, file)
+        sf.save()
+        logging.info(request.user.first_name+"上传了文件：" + file.name)
+        return JsonResponse({'msg': '0'})
+
+
+class MapFileListView(LoginRequiredMixin, ListView):
+
+    paginate_by = 18
+    template_name = 'checker/mapfile_list.html'
+
+    def get_queryset(self):
+        if self.request.user.member.role != 0:
+            raise Http404
+        self.pk = self.kwargs['pk']
+        file = get_object_or_404(SourceFile, pk=int(self.pk))
+        return MappingedFile.objects.filter(source_file=file)
+
+
+@login_required
+def gethead(request):
+    fileid = request.GET.get('fileid')
+    file = SourceFile.objects.get(pk=int(fileid))
+    head = file.head.split(',')
+    return JsonResponse({'heads':head})
+
+
+@login_required
+def savefields(request):
+    fileid = request.GET.get('fileid')
+    fields = request.GET.get('fields').strip(',')
+    file = SourceFile.objects.get(pk=int(fileid))
+    _, ext = os.path.splitext(file.filename.path)
+    if ext == '.xls' or ext == '.xlsx':
+        lines = iter_xls(file.filename.path)
+        lines.next()
+    else:
+        with open(file.filename.path, 'r') as f:
+            lines = f.readlines()
+        lines = lines[1:]
+    fields_length = len(fields.split(','))
+
+    if len(fields.split(',')) != len(set(fields.split(','))):
+        return JsonResponse({'msg': '标注错误，不能标注相同的字段'})
+
+    if not list(set(['id', 'cell', 'email']) & set(fields.split(','))):
+        return JsonResponse({'msg': '标注错误,缺少（身份证,手机,邮箱）三项中的一项'})
+
+    if 'cus_num' not in fields.split(','):
+        return JsonResponse({'msg': '客户数据编号为必须标注项'})
+        
+    for index,line in enumerate(lines):
+        line = line.strip()
+        if line == '':
+            return JsonResponse({'msg': '源文件错误，请删掉第%d行的空行' % (index+2)})
+        line = line.split(',')
+        if len(line) != fields_length:
+            return JsonResponse({'msg': '源文件错误，请检查第%d行内容' % (index+2)})
+        cus_num_index = fields.split(',').index('cus_num')
+        if index+1 != int(line[cus_num_index].strip()):
+            return JsonResponse({'msg': '客户数据编号错误，请检查第%d行内容' % (index+2)})
+
+        if 'user_date' in fields.split(','):
+            num = fields.split(',').index('user_date')
+            if not re.match(r'\d{4}-\d{2}-\d{2}', line[num]):
+                return JsonResponse({'msg': '申请日期格式有误，请检查第%d行内容' % (index+2)})
+
+        if 'id' in fields.split(','):
+            index_id = fields.split(',').index('id')
+            if not line[index_id]:
+                return JsonResponse({'msg': '身份证号不能为空，请检查第%d行内容' % (index+2)})
+
+        if 'cell' in fields.split(','):
+            index_cell = fields.split(',').index('cell')
+            if not line[index_cell]:
+                return JsonResponse({'msg': '手机号不能为空，请检查第%d行内容' % (index+2)})
+
+        if 'name' in fields.split(','):
+            index_name = fields.split(',').index('name')
+            if not line[index_name]:
+                return JsonResponse({'msg': '姓名不能为空，请检查第%d行内容' % (index+2)})
+    file.fields = fields
+    file.save()
+    return JsonResponse({'msg': 0})

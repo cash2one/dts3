@@ -1,0 +1,21 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
+from django.db import models, migrations
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('analyst', '0006_queryer'),
+    ]
+
+    operations = [
+        migrations.RemoveField(
+            model_name='queryer',
+            name='constom',
+        ),
+        migrations.DeleteModel(
+            name='Queryer',
+        ),
+    ]

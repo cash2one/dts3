@@ -1,0 +1,28 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
+from django.db import models, migrations
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('analyst', '0003_interface'),
+    ]
+
+    operations = [
+        migrations.RemoveField(
+            model_name='interface',
+            name='create_time',
+        ),
+        migrations.AlterField(
+            model_name='interface',
+            name='alias',
+            field=models.CharField(max_length=120, verbose_name=b'\xe4\xb8\xad\xe6\x96\x87'),
+        ),
+        migrations.AlterField(
+            model_name='interface',
+            name='name',
+            field=models.CharField(max_length=100, verbose_name=b'\xe8\x8b\xb1\xe6\x96\x87'),
+        ),
+    ]

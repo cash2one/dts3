@@ -1,0 +1,20 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
+from django.db import models, migrations
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('analyst', '0007_auto_20170210_1051'),
+    ]
+
+    operations = [
+        migrations.AddField(
+            model_name='interface',
+            name='filehead',
+            field=models.TextField(default=b'', max_length=65535, verbose_name=b'\xe8\xa1\xa8\xe5\xa4\xb4', blank=True),
+            preserve_default=True,
+        ),
+    ]

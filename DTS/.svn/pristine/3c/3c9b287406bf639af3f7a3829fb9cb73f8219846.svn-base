@@ -1,0 +1,23 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
+from django.db import models, migrations
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('account', '0043_member_apicodes'),
+    ]
+
+    operations = [
+        migrations.RenameField(
+            model_name='extra',
+            old_name='ip_list',
+            new_name='ips',
+        ),
+        migrations.RemoveField(
+            model_name='extra',
+            name='api_list',
+        ),
+    ]

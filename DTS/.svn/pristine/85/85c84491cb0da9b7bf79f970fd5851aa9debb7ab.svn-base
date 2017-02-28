@@ -1,0 +1,19 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
+from django.db import models, migrations
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('analyst', '0014_auto_20170215_1532'),
+    ]
+
+    operations = [
+        migrations.AlterField(
+            model_name='interface',
+            name='fields',
+            field=models.TextField(default=b'', max_length=65535, verbose_name=b'\xe5\xbf\x85\xe8\xa6\x81\xe5\xad\x97\xe6\xae\xb5', blank=True),
+        ),
+    ]

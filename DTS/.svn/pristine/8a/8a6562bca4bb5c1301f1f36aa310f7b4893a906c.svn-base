@@ -1,0 +1,39 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
+from django.db import models, migrations
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('account', '0034_auto_20170210_1055'),
+    ]
+
+    operations = [
+        migrations.AlterField(
+            model_name='queryer',
+            name='apicode',
+            field=models.CharField(default=b'', max_length=20, blank=True),
+        ),
+        migrations.AlterField(
+            model_name='queryer',
+            name='dofile',
+            field=models.CharField(default=b'', max_length=100, blank=True),
+        ),
+        migrations.AlterField(
+            model_name='queryer',
+            name='password',
+            field=models.CharField(default=b'', max_length=20, blank=True),
+        ),
+        migrations.AlterField(
+            model_name='queryer',
+            name='taskid',
+            field=models.CharField(default=b'', max_length=200, verbose_name=b'taskid', blank=True),
+        ),
+        migrations.AlterField(
+            model_name='queryer',
+            name='username',
+            field=models.CharField(default=b'', max_length=50, blank=True),
+        ),
+    ]

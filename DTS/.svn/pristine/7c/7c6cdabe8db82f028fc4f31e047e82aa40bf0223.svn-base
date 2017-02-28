@@ -1,0 +1,28 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
+from django.db import models, migrations
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('account', '0011_delete_role'),
+    ]
+
+    operations = [
+        migrations.AlterModelOptions(
+            name='queryer',
+            options={'verbose_name': '\u753b\u50cf\u5e10\u53f7', 'verbose_name_plural': '\u753b\u50cf\u5e10\u53f7\u5217\u8868'},
+        ),
+        migrations.RenameField(
+            model_name='queryer',
+            old_name='user',
+            new_name='member',
+        ),
+        migrations.AlterField(
+            model_name='member',
+            name='role',
+            field=models.IntegerField(default=0, max_length=1, choices=[(0, b'\xe5\xae\xa2\xe6\x88\xb7'), (1, b'\xe5\x88\x86\xe6\x9e\x90\xe5\xb8\x88'), (2, b'\xe6\xa3\x80\xe9\xaa\x8c\xe5\xb8\x88')]),
+        ),
+    ]

@@ -1,0 +1,36 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
+from django.db import models, migrations
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('account', '0033_auto_20170207_1159'),
+        ('analyst', '0005_interface_fields'),
+    ]
+
+    operations = [
+        migrations.CreateModel(
+            name='Queryer',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('name', models.CharField(max_length=50, verbose_name=b'\xe7\x94\xbb\xe5\x83\x8f\xe8\xb4\xa6\xe5\x8f\xb7')),
+                ('passwd', models.CharField(max_length=20, verbose_name=b'\xe7\x94\xbb\xe5\x83\x8f\xe5\xaf\x86\xe7\xa0\x81')),
+                ('apicode', models.CharField(max_length=20)),
+                ('is_busy', models.BooleanField(default=False)),
+                ('do_on_file', models.CharField(max_length=100, null=True, blank=True)),
+                ('total_lines', models.IntegerField(null=True, blank=True)),
+                ('start_match', models.DateTimeField(null=True, blank=True)),
+                ('end_match', models.DateTimeField(null=True, blank=True)),
+                ('constom', models.OneToOneField(related_name=b'Queryer.member', null=True, blank=True, to='account.Member')),
+            ],
+            options={
+                'ordering': ['-id'],
+                'verbose_name': '\u753b\u50cf\u67e5\u8be2\u5e10\u53f7',
+                'verbose_name_plural': '\u753b\u50cf\u67e5\u8be2\u5e10\u53f7\u5217\u8868',
+            },
+            bases=(models.Model,),
+        ),
+    ]

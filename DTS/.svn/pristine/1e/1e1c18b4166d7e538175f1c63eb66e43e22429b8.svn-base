@@ -1,0 +1,86 @@
+{% load staticfiles %}
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="DTS">
+        <meta name="author" content="100credit">
+        <link rel="icon" href="{% static "images/favicon.ico" %}">
+        <title>DTS - 登陆</title>
+        <!-- CSS -->
+        <!-- <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Roboto:400,100,300,500"> -->
+        <link rel="stylesheet" href="/static/assets/bootstrap/css/bootstrap.min.css">
+        <link rel="stylesheet" href="/static/assets/font-awesome/css/font-awesome.min.css">
+        <link rel="stylesheet" href="/static/assets/css/form-elements.css">
+        <link rel="stylesheet" href="/static/assets/css/style.css">
+        <!-- Favicon and touch icons -->
+        <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/static/assets/ico/apple-touch-icon-144-precomposed.png">
+        <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/static/assets/ico/apple-touch-icon-114-precomposed.png">
+        <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/static/assets/ico/apple-touch-icon-72-precomposed.png">
+        <link rel="apple-touch-icon-precomposed" href="/static/assets/ico/apple-touch-icon-57-precomposed.png">
+    </head>
+
+    <body>
+
+        <!-- Top content -->
+        <div class="top-content">
+            
+            <div class="inner-bg">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-sm-8 col-sm-offset-2 text">
+                            <h1><strong>百融数据测试管理系统</strong></h1>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6 col-sm-offset-3 form-box">
+                            <div class="form-top">
+                                <div class="form-top-left">
+                                {% for message in messages %}
+                                    <h3 style="color:red;">{{ message }}</h3>
+                                {% endfor %}
+                                </div>
+                                <div class="form-top-right">
+                                    <i class="fa fa-lock"></i>
+                                </div>
+                            </div>
+                            <div class="form-bottom">
+                                <form role="form" action="" method="post" class="login-form">
+                                    {% csrf_token %}
+                                    <div class="form-group">
+                                        <label class="sr-only" for="username">Username</label>
+                                        <input type="text" name="{{ form.username.html_name }}"  value="{{ form.username.value }}" placeholder="用户名" class="form-uname form-control" style="font-size:20px;">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="sr-only" for="password">Password</label>
+                                        <input type="password" name="{{ form.password.html_name }}" value="{{ form.password.value }}" placeholder="密码" class="form-password form-control" style="font-size:20px;">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="sr-only" for="validate">Valide</label>
+                                        <input type="text" name="{{ form.validate.html_name }}"  placeholder="验证码" class="form-valide form-control" id="validate" style="width:48%; font-size:20px;">
+                                        <img src="/accounts/validate/" onclick='$(this).attr("src", "/accounts/validate/" + Math.random())' style="width:48%;  position: relative;left: 38%;bottom: 50px;">
+                                        <a href="/accounts/forgetpassword/" style="float:left">忘记密码?</a>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn" style="font-size:28px; ">登录</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+
+   <div class="footer">
+        <p style="color:#FFFFFF; font-size:25px;">Copyright © 2015百融（北京）金融信息服务股份有限公司.All Right Reserved.</p>
+    </div>
+        <!-- Javascript -->
+        <script src="/static/assets/js/jquery-1.11.1.min.js"></script>
+        <script src="/static/assets/bootstrap/js/bootstrap.min.js"></script>
+        <script src="/static/assets/js/jquery.backstretch.min.js"></script>
+        <script src="/static/assets/js/scripts.js"></script>
+    </body>
+</html>
