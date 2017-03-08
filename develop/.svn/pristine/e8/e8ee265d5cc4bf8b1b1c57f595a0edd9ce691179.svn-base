@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load bootstrap3 %}
+{% block title %}匹配进度{% endblock %}
+{% block content %}
+
+	<table class="table table-hover table-striped" style="margin-top: 3px;" id="mytable">
+        <thead>
+            <tr>
+                <th>分析师账号</th>
+                <th>文件名</th>
+                <th>匹配接口</th>
+                <th>数量</th>
+                <th>进度</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody id="sches">
+        </tbody>
+        <tbody >
+                {% for task in wtask_list %}
+                <tr>
+                    <td style="width:10%;">{{task.username}}</td>
+                    <td style="width:30%; overflow: hidden;" title="{{task.filename}}">{{task.filename | truncatechars:10}}</td>
+                    <td style="width:30%; overflow: hidden;" title="{{task.mapinter}}">{{task.mapinter | truncatechars:30}}</td>
+                    <td style="width:10%">{{task.total_lines}}</td>
+                    <td style="width:10%">待匹配</td>
+                    <td style="width:10%"><a style="cursor:pointer" name="{{task.username}}" wtaskid="{{task.id}}" class="delete">删除</a></td>
+                </tr>
+                {% endfor %}
+        </tbody>
+    </table>
+
+{% endblock %}
+{% block js %}
+    <script>
+    $(document).ready(function () {
+
+        var tSches = $('#sches');
+        function updateSches() {
+            $.getJSON("{% url "task_schedule_list" %}", {}, function (ret) {
+                if (ret.msg == 0) {
+                    var sches = ret.sches;
+                    tSches.empty();
+                    for(var i = 0; i < sches.length; i++) {
+                        var sche = sches[i];
+                        tSches.append('<tr><td>'+sche.username+'</td><td title="'
+                            +sche.filename+'" style="overflow: hidden;">'
+                            +sche.filename+'</td><td title="'+sche.mapinter+'" style="overflow: hidden;">'
+                            +sche.mapinter+'</td><td>'+sche.total_lines+'</td><td>'
+                            +sche.percentage+'</td><td><a style="cursor:pointer" name="'+sche.username+'" id="stoptask">停止</a></td></tr>');
+                    }
+                    setTimeout(updateSches, 5000);
+                }
+            });
+        }
+        setTimeout(updateSches, 200);
+
+        $('#mytable').click(function (e) {
+            var mydom = e.target
+            if(mydom.id=="stoptask"){
+                var username = mydom.name;
+                bootbox.confirm('确认终止吗？', function (result) {
+                    if (result) {
+                        loading(true);
+                        $.getJSON("{% url "stop_task" %}", {username:username}, function (ret) {
+                            if (ret.msg == 0) {
+                                location.reload();
+                            }else{
+                                loading(false);
+                                bootbox.alert(ret.msg);
+                            }
+                        });
+                    }
+                });
+            }
+        });
+
+        $('.delete').click(function (e) {
+            var wtaskid = $(this).attr('wtaskid');
+            var username = $(this).attr('name');
+            bootbox.confirm('确认删除吗？', function (result) {
+                if (result) {
+                    loading(true);
+                    $.getJSON("{% url "delete_task" %}", {username:username,wtaskid:wtaskid}, function (ret) {
+                        if (ret.msg == 0) {
+                            location.reload();
+                        }else{
+                            loading(false);
+                            bootbox.alert(ret.msg);
+                        }
+                    });
+                }
+            });
+        });
+
+    });
+    </script>
+{% endblock %}

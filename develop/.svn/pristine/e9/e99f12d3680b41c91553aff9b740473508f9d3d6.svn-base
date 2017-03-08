@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% load bootstrap3 %}
+{% block title %}客户信息{% endblock %}
+{% block content %}
+
+	<table class="table table-hover ">
+        <thead>
+            <tr>
+                <th>客户名</th>
+                <th>账号</th>
+                <th>邮箱</th>
+                <th>客户级别</th>
+                <th>城市</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for com in page_obj %}
+                <tr >       
+                    <td style="width:32%">{{ com.user.first_name }}</td>
+                    <td style="width:20%">{{ com.user.username }}</td>
+                    <td style="width:20%">{{ com.user.email }}</td>
+                    <td style="width:20%">{{ com.level }}</td>
+                    <td style="width:20%">{{ com.city }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div align="center">
+        {% bootstrap_pagination page_obj url=request.path size="small" %}
+    </div>
+    
+
+{% endblock %}
+{% block js %}
+    <script>
+    $(document).ready(function () {
+
+    });
+    </script>
+{% endblock %}

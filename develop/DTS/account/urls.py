@@ -1,0 +1,16 @@
+from django.conf.urls import url
+from .views import (
+    LoginView, createvalidate, getvalidate,
+    ForgetPasswordView, profile_view, ChangePasswordView, logout_view
+)
+
+
+urlpatterns = [
+    url(r'^login/$', LoginView.as_view()),
+    url(r'^logout/$', logout_view, name='logout'),
+    url(r'^validate/.*$', createvalidate),
+    url(r'^forgetpassword/$', ForgetPasswordView.as_view()),
+    url(r'^getvalidate/$', getvalidate),
+    url(r'^(?P<username>[.\w]+)/profile/$', profile_view, name='profile'),
+    url(r'^(?P<username>[.\w]+)/changepwd/$', ChangePasswordView.as_view(), name='change_pwd'),
+]

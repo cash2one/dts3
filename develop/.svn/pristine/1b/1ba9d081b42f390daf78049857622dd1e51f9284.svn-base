@@ -1,0 +1,128 @@
+{% load staticfiles %}
+
+<html lang="en">
+
+    <head>
+
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="DTS">
+        <meta name="author" content="100credit">
+        <link rel="icon" href="{% static "images/favicon.ico" %}">
+        <title>DTS - 登录</title>
+
+        <!-- CSS -->
+        <!-- <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Roboto:400,100,300,500"> -->
+        <link rel="stylesheet" href="/static/assets/bootstrap/css/bootstrap.min.css">
+        <link rel="stylesheet" href="/static/assets/font-awesome/css/font-awesome.min.css">
+        <link rel="stylesheet" href="/static/assets/css/form-elements.css">
+        <link rel="stylesheet" href="/static/assets/css/style.css">
+
+        <!-- Favicon and touch icons -->
+  
+        <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/static/assets/ico/apple-touch-icon-144-precomposed.png">
+        <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/static/assets/ico/apple-touch-icon-114-precomposed.png">
+        <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/static/assets/ico/apple-touch-icon-72-precomposed.png">
+        <link rel="apple-touch-icon-precomposed" href="/static/assets/ico/apple-touch-icon-57-precomposed.png">
+
+    </head>
+
+    <body>
+
+        <!-- Top content -->
+        <div class="top-content">
+            
+            <div class="inner-bg">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-sm-8 col-sm-offset-2 text">
+                            <h1><strong>百融数据测试管理系统</strong></h1>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6 col-sm-offset-3 form-box">
+                            <div class="form-top">
+                                <div class="form-top-left">
+                                {% for message in messages %}
+                                    <h3 style="color:red;">{{ message }}</h3>
+                                {% endfor %}
+                                </div>
+                                <div class="form-top-right">
+                                    <i class="fa fa-lock"></i>
+                                </div>
+                            </div>
+                            <div class="form-bottom">
+                                <form role="form" action="/accounts/forgetpassword/" method="post" class="login-form">
+                                    {% csrf_token %}
+                                    <div class="form-group"  style="position:relative; ">
+                                        <label class="sr-only" for="username">Username</label>
+                                        <input type="text" name="username" id='username' value="{{username}}" placeholder="用户名" class="form-email form-control"  style="font-size:20px; width:65%; float:left;">
+                                        <button type="submit" class="btn" id="btnSendCode" style="font-size:20px; width:30%; position:relative; left:25px;" onclick="sendMessage()">获取验证码</button>
+                                    </div>
+                                    <div class="form-group" style="position:relative; top:0px;">
+                                        <label class="sr-only" for="validate">Validate</label>
+                                        <input type="text" name="validate" value="{{validate}}"  placeholder="验证码" class="form-password form-control" id="validate"  style="font-size:20px;">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="sr-only" for="password1">Password</label>
+                                        <input type="password" name="password1" placeholder="新密码"  value="" class="form-password form-control" id="passwd1"  style="font-size:20px;">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="sr-only" for="password2">Password</label>
+                                        <input type="password" name="password2" placeholder="再次输入密码" value="" class="form-password form-control" id="passwd2"  style="font-size:20px;">
+                                    </div>
+                                    <button type="submit" class="btn" style="font-size:28px;">提交</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+
+   <div class="footer">
+        <p style="color:#FFFFFF; font-size:25px;">Copyright © 2015百融（北京）金融信息服务股份有限公司.All Right Reserved.</p>
+    </div>
+        <script src="/static/assets/js/jquery-1.11.1.min.js"></script>
+        <script src="/static/assets/bootstrap/js/bootstrap.min.js"></script>
+        <script src="/static/assets/js/jquery.backstretch.min.js"></script>
+        <script src="/static/assets/js/scripts.js"></script>
+        <script src="{% static "js/bootbox.min.js" %}"></script>
+        <script src="{% static "js/dts.js" %}"></script>
+        <script type="text/javascript">  
+        var InterValObj;
+        var count = 60;
+        var curCount
+        function sendMessage() {
+            curCount = count           
+            $.getJSON("/accounts/getvalidate/", {'username': $("#username").val()}, function (ret) {
+               if (ret.msg != 0) {
+                    bootbox.alert(ret.msg);
+                    return
+                }
+                else {
+                    $("#btnSendCode").text(curCount);
+                    $("#btnSendCode").attr("disabled", "true");
+                    bootbox.alert('验证码已发送至：'+ret.email+',请登陆邮箱查看！');
+                    InterValObj = window.setInterval(SetRemainTime, 1000);
+                }
+            });
+             
+        }
+        function SetRemainTime() {
+                    if (curCount == 0) {                
+                        window.clearInterval(InterValObj);//停止计时器
+                        $("#btnSendCode").removeAttr("disabled");//启用按钮
+                        $("#btnSendCode").text("获取验证码");
+                    }
+                    else {
+                        curCount--;
+                        $("#btnSendCode").text(curCount);
+                    }
+                }
+        </script> 
+    </body>
+</html>

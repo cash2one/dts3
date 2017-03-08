@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% load bootstrap3 %}
+{% block title %}报告文件{% endblock %}
+{% block content %}
+
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target=".upreportfile">上传报告</button>
+	<table class="table table-hover table-striped" style="margin-top: 3px;">
+        <thead>
+            <tr>
+                <th>文件名称</th>
+                <th>备注</th>
+                <th>文件大小</th>
+                <th>上传时间</th>
+                <th>查看密码</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for file in page_obj %}
+                <tr>
+                    <td style="width:20%">{{ file | truncatechars:40 }}</td>
+                    <td style="width:20%">{{ file.file_desc | truncatechars:18 }}</td>
+                    <td style="width:10%">{{ file.file_size | filesizeformat}}</td>
+                    <td style="width:25%">{{ file.create_time | date:"Y-m-d H:i:s" }}</td>
+                    <td style="width:15%">{{ file.passwd }}</td>
+                    <td style="width:10%"><a class="delete" style="cursor:pointer" name="{{file.id}}">删除</a></td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div align="center">
+        {% bootstrap_pagination page_obj url=request.path size="small" %}
+    </div>
+
+
+    <div class="modal fade upreportfile" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">上传文件</h4>
+            </div>
+            <div class="modal-body">
+                <form action="/customer/upfile/" method="post" class="form" id="reportfileform" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="text" name="fileid" value="{{fileid}}"  style="display:none;">
+                    <div class="form-group">
+                        <label for="InputFile">选择文件:</label>
+                        <input type="file" id="InputFile" name="reportfile" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="extra_info" class="control-label">备注：</label>
+                        <textarea id="extra_info" name="extra_info" class="form-control" rows="4" placeholder="..." ></textarea> 
+                    </div>
+                    <div class="form-group">
+                        <label for="cus_info" class="control-label">客户信息：</label>
+                        <p id="cus_info">{{cus_info}}</p>
+                    </div>
+                    <p style="color:red;">请核对客户信息，邮件将会发送至该客户邮箱！</p>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal">取消</button>
+                <button type="button" id="upreportfile"  class="btn btn-success" >确定</button>
+            </div>
+        </div>
+      </div>
+    </div>
+
+
+{% endblock %}
+{% block js %}
+    <script>
+    $(document).ready(function () {
+        $('#upreportfile').click(function () {
+            var data = new FormData($('#reportfileform').get(0));
+            loading(true);
+            $.ajax({  
+            url:"/analyst/upreportfile/",  
+            type:"post",  
+            data:data,  
+            enctype: "multipart/form-data",
+            cache: false,  
+            processData: false,  
+            contentType: false,  
+            success:function(ret){
+                if (ret.msg == 0){
+                    location.reload();
+                } else {
+                    bootbox.alert(ret.msg)
+                    loading(false);
+                }
+            },  
+
+            });
+        });
+
+        $('.delete').click(function () {
+            var fileid = $(this).attr("name");
+            bootbox.confirm('确认删除吗？', function (result) {
+                if (result) {
+                    loading(true);
+                    $.getJSON("{% url "deletereportfile" %}", {fileid:fileid}, function (ret) {
+                        if (ret.msg == 0) {
+                            location.reload();
+                        } 
+                    });
+                }
+            });
+        });
+
+    });
+    </script>
+{% endblock %}

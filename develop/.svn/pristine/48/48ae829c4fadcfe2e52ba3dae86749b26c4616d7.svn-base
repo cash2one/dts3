@@ -1,0 +1,13 @@
+celery==4.0.2
+Django==1.8.17
+mysql-python==1.2.5
+django-bootstrap3==8.1.0
+futures==3.0.5
+msgpack-python==0.4.8
+pytz==2016.10
+redis==2.10.5
+simplejson==3.10.0
+xlrd==1.0.0
+xlwt==1.2.0
+zeroc-ice==3.6.3
+pillow==4.0.0

@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load bootstrap3 %}
+{% block title %}报告文件{% endblock %}
+{% block content %}
+	<table class="table table-hover table-striped" style="margin-top: 3px;">
+        <thead>
+            <tr>
+                <th>文件名称</th>
+                <th>备注</th>
+                <th>文件大小</th>
+                <th>上传时间</th>
+                <th>查看密码</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for file in page_obj %}
+                <tr>
+                    <td style="width:35%"><a href="{% url 'down_customer_reportfile' pk=file.id %}">{{ file | truncatechars:40 }}</a></td>
+                    <td style="width:20%">{{ file.file_desc | truncatechars:18 }}</td>
+                    <td style="width:10%">{{ file.file_size }}</td>
+                    <td style="width:25%">{{ file.create_time | date:"Y-m-d H:i:s" }}</td>
+                    <td style="width:15%">{{ file.passwd }}</td>
+
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div align="center">
+        {% bootstrap_pagination page_obj url=request.path size="small" %}
+    </div>
+
+{% endblock %}
